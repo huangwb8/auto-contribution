@@ -1,4 +1,4 @@
-# auto-contribution - Claude Code 项目指令
+# bensz-auto-contribution - Claude Code 项目指令
 
 ## 核心指令
 

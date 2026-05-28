@@ -1,6 +1,6 @@
-# auto-contribution
+# bensz-auto-contribution
 
-`auto-contribution` 是 `bensz auto contribution` 的原型项目，目标是为 AI 编程工具提供一个可调用的 tool，用来创建和验证 `.bac` 文件。
+`bensz-auto-contribution` 是 `bensz auto contribution` 的原型项目，目标是为 AI 编程工具提供一个可调用的 tool，用来创建和验证 `.bac` 文件。
 
 `.bac` 文件用于记录某个具体项目里人类与 AI 的贡献边界。它应该忠实记录需求来源、AI 生成内容、工具执行结果、人工确认、文件改动与验证证据，并通过哈希链、签名和追加式事件模型让篡改行为可发现。
 
@@ -102,7 +102,7 @@ python -m unittest discover -s tests -v
 ## 目录结构
 
 ```
-auto-contribution/
+bensz-auto-contribution/
 ├── AGENTS.md
 ├── CHANGELOG.md
 ├── CLAUDE.md
@@ -120,7 +120,7 @@ auto-contribution/
 ├── README.md
 ├── Prompts.md
 ├── .gitignore
-└── auto-contribution.code-workspace
+└── bensz-auto-contribution.code-workspace
 ```
 
 ## AI 辅助开发

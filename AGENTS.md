@@ -1,6 +1,6 @@
-# auto-contribution - 项目指令
+# bensz-auto-contribution - 项目指令
 
-本项目用于开发 `bensz auto contribution`，即面向 AI 编程工具的贡献归因与审计系统。系统核心产物是 `.bac` 文件，用于在具体项目中记录人类与 AI 的贡献边界、操作来源、时间顺序与可验证证据。
+本项目用于开发 `bensz-auto-contribution`，即面向 AI 编程工具的贡献归因与审计系统。系统核心产物是 `.bac` 文件，用于在具体项目中记录人类与 AI 的贡献边界、操作来源、时间顺序与可验证证据。
 
 ## 项目目标
 
