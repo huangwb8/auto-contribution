@@ -1,4 +1,4 @@
-"""BAC v1 schema validation."""
+"""BAC v2 event schema validation."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from typing import Any
 from bac.core.hash_chain import is_sha256
 
 
-FORMAT_VERSION = "bac.v1"
+FORMAT_VERSION = "bac.event.v2"
 
 SOURCE_TYPES = {"human", "ai", "tool", "system"}
 TRUST_LEVELS = {"declared", "observed", "signed", "verified", "anchored"}

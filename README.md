@@ -36,7 +36,7 @@ python -m pip install -e .
 ### 使用
 
 ```bash
-# 创建 project.bac，并写入 genesis event
+# 创建单文件 project.bac 容器，并写入 genesis event
 bac init
 
 # 记录人类需求
@@ -81,13 +81,23 @@ bac inspect
 - `.bac` 不应记录敏感密钥、完整私有提示词或无关用户隐私
 - 任何 AI 贡献记录都应尽量关联实际 diff、命令输出、测试结果或用户确认
 - 涉及签名、哈希、身份和时间戳的逻辑必须有测试覆盖
-- 当前 MVP 支持未签名事件、哈希链验证、本地 checkpoint 和敏感信息脱敏；Ed25519 签名与外部可信时间戳保留为后续扩展
+- 当前 v2 支持单文件 ZIP 容器、未签名事件、哈希链验证、本地 checkpoint 和敏感信息脱敏；Ed25519 签名与外部可信时间戳保留为后续扩展
 
 ## `.bac` 格式
 
-默认文件名为 `project.bac`，格式为 JSON Lines。每一行都是一条 canonical JSON 事件，事件包含：
+默认文件名为 `project.bac`。外部表现为一个 `.bac` 文件，内部是 ZIP 容器，至少包含：
 
-- `format`：固定为 `bac.v1`
+```text
+manifest.json
+events/000000000001.json
+events/000000000002.json
+```
+
+`manifest.json` 记录容器版本、事件格式、项目绑定信息、初始事件 hash 和存储约定。`events/` 下每个文件是一条 canonical JSON 事件，文件名从 `000000000001.json` 开始连续递增。验证器会检查容器是否为有效 ZIP、内部路径是否重复、事件编号是否连续、manifest 是否与 genesis 事件一致，以及事件哈希链是否完整。
+
+每条事件包含：
+
+- `format`：固定为 `bac.event.v2`
 - `event_type`：如 `genesis`、`human_instruction`、`ai_generation`、`tool_command`、`file_change`、`test_result`、`checkpoint`
 - `source_type`：固定区分 `human`、`ai`、`tool`、`system`
 - `trust_level`：区分 `declared`、`observed`、`signed`、`verified`、`anchored`
@@ -97,7 +107,7 @@ bac inspect
 - `redactions`：记录脱敏字段和原因
 - `prev_event_hash` 与 `event_hash`：形成可复算哈希链
 
-`event_hash` 基于排序后的 canonical JSON 计算，可发现历史事件内容修改、插入、删除中间事件和重排。没有外部 anchor 时，单纯哈希链不能完全发现尾部截断；本地 `checkpoint` 用于记录当前 head hash，后续可扩展到 git note、发布产物或可信时间戳服务。
+`event_hash` 基于排序后的 canonical JSON 计算，可发现历史事件内容修改、插入、删除中间事件和重排。ZIP 只提供单文件封装，不被描述为物理不可篡改；BAC 的安全目标仍然是通过容器结构、事件序列、哈希链和 checkpoint 实现 tamper-evident。没有外部 anchor 时，单纯哈希链不能完全发现尾部截断；本地 `checkpoint` 用于记录当前 head hash，后续可扩展到 git note、发布产物或可信时间戳服务。
 
 更多字段解释、CLI 参数映射和哈希链原理见 [BAC 工作原理教程](docs/bac-tutorial.md)。
 
@@ -108,7 +118,7 @@ python -m pytest -q
 python -m unittest discover -s tests -v
 ```
 
-核心测试覆盖 canonicalization、哈希链复算、篡改检测、checkpoint 验证、敏感信息脱敏和 CLI 端到端流程。
+核心测试覆盖 canonicalization、v2 容器结构、哈希链复算、篡改检测、重复内部路径检测、checkpoint 验证、敏感信息脱敏和 CLI 端到端流程。
 
 ## 目录结构
 

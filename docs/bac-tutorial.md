@@ -4,7 +4,17 @@
 
 ## 核心概念
 
-`.bac` 是一个 JSON Lines 文件，默认文件名是 `project.bac`。JSON Lines 的意思是：文件里的每一行都是一条完整 JSON 事件。当前实现不会原地修改历史事件，只会向文件末尾追加新事件。
+`.bac` 是一个单文件 ZIP 容器，默认文件名是 `project.bac`。用户通常只需要看到这一个文件；工具会在容器内部维护 manifest、事件序列和后续可扩展的证据文件。
+
+当前 v2 容器至少包含：
+
+```text
+manifest.json
+events/000000000001.json
+events/000000000002.json
+```
+
+`manifest.json` 记录容器版本、事件格式、项目绑定信息、初始事件 hash 和存储约定。`events/` 下每个文件是一条 canonical JSON 事件，文件名从 `000000000001.json` 开始连续递增。当前实现不会原地修改历史事件，而是为新事件写入新的内部事件条目。
 
 一个 `.bac` 文件可以理解为项目贡献时间线：
 
@@ -20,7 +30,7 @@ genesis -> human_instruction -> ai_generation -> file_change -> test_result -> c
 - 前一条事件的 hash 是什么
 - 当前事件自身的 hash 是什么
 
-这使 `.bac` 具备 tamper-evident 能力：它不能阻止别人编辑文件，但编辑、插入、删除或重排历史事件后，验证器可以发现 hash 不匹配或链条断裂。
+这使 `.bac` 具备 tamper-evident 能力：它不能阻止别人编辑 ZIP 文件，但编辑、插入、删除、复制隐藏内部条目或重排历史事件后，验证器可以发现容器结构异常、hash 不匹配或链条断裂。
 
 ## 快速流程
 
@@ -102,7 +112,7 @@ bac inspect
 
 ```json
 {
-  "format": "bac.v1",
+  "format": "bac.event.v2",
   "event_id": "bac_20260528T020756Z_c77031f6bcee4466",
   "event_type": "file_change",
   "source_type": "ai",
@@ -150,7 +160,7 @@ bac inspect
 
 `format`
 
-固定为 `bac.v1`。验证器用它判断当前事件是否属于支持的 BAC 格式。
+固定为 `bac.event.v2`。验证器用它判断当前事件是否属于支持的 BAC 事件格式。
 
 `event_id`
 
@@ -220,7 +230,7 @@ bac inspect
 - `declared_kind`：声明类型
 - `session_id`：可选会话标识
 
-注意：当前 MVP 里 `actor` 是声明信息，不等同于强身份认证。需要身份真实性时，应结合未来签名或外部可信身份机制。
+注意：当前 v2 里 `actor` 是声明信息，不等同于强身份认证。需要身份真实性时，应结合未来签名或外部可信身份机制。
 
 `payload`
 
@@ -269,7 +279,7 @@ bac inspect
 
 `signature`
 
-签名字段。当前 MVP 要求它可以是 `null` 或对象，但还没有实现签名验证。验证器遇到非空签名会报告当前不支持签名验证。因此目前不要把它理解为已经完成的身份真实性保障。
+签名字段。当前 v2 要求它可以是 `null` 或对象，但还没有实现签名验证。验证器遇到非空签名会报告当前尚不支持签名验证。因此目前不要把它理解为已经完成的身份真实性保障。
 
 ## CLI 参数如何变成事件
 
@@ -281,7 +291,7 @@ bac inspect
 
 `--bac-file`
 
-账本文件路径。默认是 `project.bac`。如果传相对路径，会放在 `--root` 下；如果传绝对路径，则直接使用该路径。
+账本容器文件路径。默认是 `project.bac`。如果传相对路径，会放在 `--root` 下；如果传绝对路径，则直接使用该路径。
 
 `init --force`
 
@@ -395,14 +405,19 @@ event_hash = hash(third_event_without_event_hash)
 - 删除中间事件会导致后续 `prev_event_hash` 接不上
 - 重排事件会导致链条断裂
 
-不过，单纯本地哈希链不能完全防止尾部截断。例如攻击者删除最后几条事件后，剩余前缀本身仍可能是一条自洽链。当前 MVP 用 `checkpoint` 表示“我在这里见过这个 head hash”，后续可以把 checkpoint head 发布到 git note、release artifact 或可信时间戳服务，以增强尾部截断发现能力。
+不过，单纯本地哈希链不能完全防止尾部截断。例如攻击者删除最后几条事件后，剩余前缀本身仍可能是一条自洽链。当前 v2 用 `checkpoint` 表示“我在这里见过这个 head hash”，后续可以把 checkpoint head 发布到 git note、release artifact 或可信时间戳服务，以增强尾部截断发现能力。
 
 ## 验证器会检查什么
 
 `bac verify` 会检查：
 
 - `.bac` 文件存在
-- 每一行都是合法 JSON
+- `.bac` 是有效的 v2 ZIP 容器
+- 容器包含 `manifest.json`
+- 内部路径没有重复条目
+- `events/` 事件文件名从 `000000000001.json` 开始连续递增
+- `manifest.json` 与 genesis 事件一致
+- 每个事件文件都是合法 JSON
 - 每条事件都是 JSON object
 - 必填字段齐全
 - `format`、`event_type`、`source_type`、`trust_level` 合法
@@ -441,13 +456,16 @@ event_hash = hash(third_event_without_event_hash)
 
 ## 当前安全边界
 
-当前 BAC MVP 已支持：
+当前 BAC v2 已支持：
 
-- 追加式 JSON Lines 账本
+- 单文件 ZIP 容器
+- 追加式内部事件序列
 - human、ai、tool、system 四类来源区分
 - canonical JSON
 - SHA-256 哈希链
 - 项目上下文绑定
+- 容器 manifest 校验
+- 重复内部路径和事件编号缺口检测
 - 文件快照 hash
 - git diff 摘要证据
 - 本地 checkpoint

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bensz-auto-contribution"
-version = "1.0.0"
+version = "2.0.0"
 description = "Tamper-evident BAC contribution attribution ledger"
 readme = "README.md"
 requires-python = ">=3.10"

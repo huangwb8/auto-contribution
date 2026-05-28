@@ -1,4 +1,4 @@
-"""BAC ledger verification."""
+"""BAC v2 container verification."""
 
 from __future__ import annotations
 
@@ -6,9 +6,17 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from zipfile import BadZipFile, ZipFile
 
+from bac.core.container import (
+    CONTAINER_FORMAT_VERSION,
+    EVENT_PATH_TEMPLATE,
+    MANIFEST_PATH,
+    duplicate_names,
+    event_sequence,
+)
 from bac.core.hash_chain import compute_event_hash
-from bac.core.schema import parse_created_at, validate_event_schema
+from bac.core.schema import FORMAT_VERSION, parse_created_at, validate_event_schema
 
 
 @dataclass
@@ -39,20 +47,35 @@ def verify_bac_file(path: Path) -> VerificationReport:
 
     events: list[Any] = []
     errors: list[str] = []
-    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-        if not line.strip():
-            continue
-        try:
-            value = json.loads(line)
-        except json.JSONDecodeError as exc:
-            errors.append(f"line {line_number}: invalid JSON: {exc.msg}")
-            continue
-        if isinstance(value, dict):
-            value["_bac_line_number"] = line_number
-        events.append(value)
+    manifest: dict[str, Any] | None = None
+    try:
+        with ZipFile(path, "r") as archive:
+            names = archive.namelist()
+            for duplicate in duplicate_names(names):
+                errors.append(f"container has duplicate entry: {duplicate}")
+
+            if MANIFEST_PATH not in names:
+                errors.append(f"container missing {MANIFEST_PATH}")
+            else:
+                manifest = _read_json_member(archive, MANIFEST_PATH, errors)
+                errors.extend(_validate_manifest(manifest))
+
+            event_members = sorted(
+                (sequence, name)
+                for name in names
+                if (sequence := event_sequence(name)) is not None
+            )
+            errors.extend(_validate_event_sequences([sequence for sequence, _name in event_members]))
+            for _sequence, name in event_members:
+                events.append(_read_json_member(archive, name, errors))
+    except BadZipFile:
+        return VerificationReport(
+            status="fail",
+            errors=[f"BAC file is not a valid v2 ZIP container: {path}"],
+        )
 
     report = verify_events(events)
-    report.errors = errors + report.errors
+    report.errors = errors + _manifest_consistency_errors(manifest, events) + report.errors
     report.status = _status(report.errors, report.warnings)
     return report
 
@@ -74,8 +97,8 @@ def verify_events(events: list[Any]) -> VerificationReport:
             errors.extend(validate_event_schema(event, index + 1))
             continue
 
-        line_number = event.pop("_bac_line_number", None)
-        errors.extend(validate_event_schema(event, line_number))
+        event = dict(event)
+        errors.extend(validate_event_schema(event))
 
         event_id = event.get("event_id", f"#{index + 1}")
         expected_hash = compute_event_hash(event)
@@ -112,7 +135,7 @@ def verify_events(events: list[Any]) -> VerificationReport:
         signature = event.get("signature")
         if signature is not None:
             signed_count += 1
-            errors.append(f"event {event_id}: signature verification is not supported in MVP")
+            errors.append(f"event {event_id}: signature verification is not supported yet")
 
         if event.get("event_type") == "checkpoint":
             checkpoint_count += 1
@@ -150,3 +173,57 @@ def _status(errors: list[str], warnings: list[str]) -> str:
     if warnings:
         return "warn"
     return "pass"
+
+
+def _read_json_member(archive: ZipFile, name: str, errors: list[str]) -> Any:
+    try:
+        return json.loads(archive.read(name).decode("utf-8"))
+    except UnicodeDecodeError:
+        errors.append(f"{name}: content must be UTF-8 JSON")
+    except json.JSONDecodeError as exc:
+        errors.append(f"{name}: invalid JSON: {exc.msg}")
+    return None
+
+
+def _validate_manifest(manifest: Any) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(manifest, dict):
+        return [f"{MANIFEST_PATH}: manifest must be a JSON object"]
+    if manifest.get("format") != CONTAINER_FORMAT_VERSION:
+        errors.append(f"{MANIFEST_PATH}: format must be {CONTAINER_FORMAT_VERSION}")
+    if manifest.get("event_format") != FORMAT_VERSION:
+        errors.append(f"{MANIFEST_PATH}: event_format must be {FORMAT_VERSION}")
+    project = manifest.get("project")
+    if not isinstance(project, dict):
+        errors.append(f"{MANIFEST_PATH}: project must be an object")
+    genesis_hash = manifest.get("genesis_event_hash")
+    if not isinstance(genesis_hash, str):
+        errors.append(f"{MANIFEST_PATH}: genesis_event_hash must be a string")
+    storage = manifest.get("storage")
+    if not isinstance(storage, dict) or storage.get("kind") != "zip":
+        errors.append(f"{MANIFEST_PATH}: storage.kind must be zip")
+    elif storage.get("event_path_template") != EVENT_PATH_TEMPLATE:
+        errors.append(f"{MANIFEST_PATH}: storage.event_path_template must be {EVENT_PATH_TEMPLATE}")
+    return errors
+
+
+def _validate_event_sequences(sequences: list[int]) -> list[str]:
+    if not sequences:
+        return ["container contains no event entries"]
+    expected = list(range(1, len(sequences) + 1))
+    if sequences != expected:
+        return [f"event entries must be contiguous starting at 1; found {sequences}"]
+    return []
+
+
+def _manifest_consistency_errors(manifest: dict[str, Any] | None, events: list[Any]) -> list[str]:
+    if not isinstance(manifest, dict) or not events or not isinstance(events[0], dict):
+        return []
+
+    errors: list[str] = []
+    first_event = events[0]
+    if manifest.get("genesis_event_hash") != first_event.get("event_hash"):
+        errors.append(f"{MANIFEST_PATH}: genesis_event_hash does not match first event")
+    if manifest.get("project", {}).get("root_hash") != first_event.get("project", {}).get("root_hash"):
+        errors.append(f"{MANIFEST_PATH}: project.root_hash does not match first event")
+    return errors

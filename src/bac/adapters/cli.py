@@ -29,7 +29,7 @@ def main(argv: list[str] | None = None) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="bac", description="BAC contribution attribution ledger")
     parser.add_argument("--root", default=".", help="project root directory")
-    parser.add_argument("--bac-file", default=DEFAULT_BAC_FILE, help="BAC JSON Lines file path")
+    parser.add_argument("--bac-file", default=DEFAULT_BAC_FILE, help="BAC v2 container file path")
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
