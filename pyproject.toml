@@ -1,21 +1,42 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "bensz-auto-contribution"
-version = "2.0.0"
+version = "1.1.2"
 description = "Tamper-evident BAC contribution attribution ledger"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
   {name = "bensz auto contribution"}
+]
+keywords = ["ai", "audit", "attribution", "contribution", "tamper-evident"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Version Control",
+  "Topic :: System :: Archiving"
 ]
 dependencies = []
 
 [project.scripts]
 bac = "bac.adapters.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/huangwb8/bensz-auto-contribution"
+Documentation = "https://github.com/huangwb8/bensz-auto-contribution#readme"
+Source = "https://github.com/huangwb8/bensz-auto-contribution"
+Issues = "https://github.com/huangwb8/bensz-auto-contribution/issues"
+Changelog = "https://github.com/huangwb8/bensz-auto-contribution/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]

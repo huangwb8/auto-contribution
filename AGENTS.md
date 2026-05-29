@@ -102,6 +102,15 @@
 
 当代码更改涉及前端 UI 优化时，应在 `./tmp/img-frontend/run-YYYYMMDD-HHMMSS` 目录下保存改动前后的对比截图（jpg 格式），利用模型的视觉智能判断任务完成情况来决定是否需要进一步优化。
 
+## PyPI 发布流程
+
+- Python 包元数据以 `pyproject.toml` 为唯一来源，版本号遵循 SemVer
+- 执行发布任务时，软件版本永远以用户明确指定的版本为准；如本地文件版本不一致，应先同步到用户指定版本，不得自行推断或升级到其它版本
+- 本地发布前检查：`python -m pytest -q`、`python -m build`、`python -m twine check dist/*`
+- GitHub Release tag 必须使用 `vX.Y.Z`，并与 `pyproject.toml` 中的版本号一致
+- 默认通过 `.github/workflows/publish-pypi.yml` 和 PyPI Trusted Publishing 发布，不在仓库中保存 PyPI token
+- 发布流程说明维护在 `docs/pypi-release.md`；改变发布策略时同步更新 README、CHANGELOG 和该文档
+
 ## Codex CLI 特定说明
 
 ### 文件与输出
@@ -129,7 +138,7 @@
 - 影响项目行为、结构、工作流、工程原则或指令文件的变更，必须更新 `CHANGELOG.md`
 - 修改 `AGENTS.md` 后，应同步检查 `CLAUDE.md` 的核心内容是否一致
 - `CHANGELOG.md` 遵循 Keep a Changelog；优先记录到 `[Unreleased]`
-- 如项目启用版本号，以配置文件为唯一来源，并遵循 SemVer：bug fix 递增修订号，新功能递增次版本号，破坏性变更递增主版本号
+- 如项目启用版本号，以配置文件为项目内唯一来源，并遵循 SemVer；发布任务中如用户明确指定版本，则必须先把配置文件同步到该版本
 
 ## 有机更新原则
 

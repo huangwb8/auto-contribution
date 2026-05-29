@@ -58,6 +58,9 @@ Building reliable attribution for AI-assisted work takes careful design, testing
 ### Installation
 
 ```bash
+python -m pip install bensz-auto-contribution
+
+# source or development install
 python -m pip install -e .
 ```
 
@@ -176,6 +179,16 @@ python -m unittest discover -s tests -v
 
 Current coverage includes canonicalization, v2 container structure, hash-chain recomputation, tamper detection, duplicate internal path detection, checkpoint verification, sensitive data redaction, and CLI end-to-end flows.
 
+Build and check PyPI distributions locally:
+
+```bash
+python -m pip install --upgrade build twine
+python -m build
+python -m twine check dist/*
+```
+
+Releases are published to PyPI through GitHub Actions and PyPI Trusted Publishing. See [PyPI Release](docs/pypi-release.md).
+
 ## 🗂️ Project Structure
 
 ```text
@@ -188,6 +201,7 @@ bensz-auto-contribution/
 ├── README.zh-CN.md
 ├── docs
 │   ├── bac-tutorial.md
+│   ├── pypi-release.md
 │   └── plans
 ├── pyproject.toml
 ├── src
