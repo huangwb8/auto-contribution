@@ -4,12 +4,20 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-29
+
+### Added（新增）
+
+- 新增中文 README 入口 `README.zh-CN.md`，与英文主 README 形成双语文档结构，便于中英文读者阅读项目定位、快速开始、格式说明和安全边界。
+- 新增 MIT `LICENSE` 文件，使 README 许可证徽章与项目元数据指向一致。
+
 ### Changed（变更）
 
 - 将 `.bac` 从 v1 JSON Lines 账本重构为 v2 单文件 ZIP 容器：内部包含 `manifest.json` 和连续编号的 `events/*.json` 事件条目，保持用户侧单文件体验，同时为后续 artifacts、checkpoint、签名和索引扩展预留空间。
 - 将事件格式升级为 `bac.event.v2`，验证器新增 v2 容器检查，包括 ZIP 有效性、重复内部路径、事件编号缺口、manifest 与 genesis 一致性，以及原有哈希链和 checkpoint 验证。
 - 将项目版本升级到 `2.0.0`。该版本不兼容未正式使用的 v1 JSON Lines `.bac` 文件。
 - 更新 README 的产品定位说明，明确 BAC 是 AI-人类协作过程记录与辅助审计系统，不替代论文署名、作者贡献声明或最终学术责任判断。
+- 将 README 调整为英文主文档，并参考 `bensz-channel` 的开源项目首页风格增加居中抬头、徽章、语言切换和 Star History 展示。
 
 ## [1.0.0] - 2026-05-28
 
