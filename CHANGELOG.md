@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Fixed（修复）
+
+- 修正 README 与中文 README 抬头徽章：版本展示改为读取 GitHub 最新 tag，避免硬编码版本号与发布标签漂移；同时明确 `.bac` 格式徽章标签。
+
 ### Changed（变更）
 
 - 根据 `init-project` 最新规范优化 `AGENTS.md`：补充 BAC 默认贡献记录约定、Single Source of Truth 维护规则，以及 `CLAUDE.md` 引用关系检查要求。

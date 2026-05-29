@@ -4,9 +4,9 @@
 
 **面向人类-AI 软件协作的篡改可发现贡献归因系统**
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/huangwb8/bensz-auto-contribution/releases)
+[![Release](https://img.shields.io/github/v/tag/huangwb8/bensz-auto-contribution?label=release&color=blue)](https://github.com/huangwb8/bensz-auto-contribution/tags)
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](https://www.python.org/)
-[![Format](https://img.shields.io/badge/.bac-v2-7C3AED.svg)](docs/bac-tutorial.md)
+[![BAC Format](https://img.shields.io/badge/BAC_format-v2-7C3AED.svg)](docs/bac-tutorial.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 [English](README.md) | [中文](README.zh-CN.md)
