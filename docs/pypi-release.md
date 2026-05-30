@@ -5,7 +5,7 @@
 ## 前置条件
 
 - 包版本号以 `pyproject.toml` 为唯一来源。
-- GitHub Release tag 必须使用 `vX.Y.Z`，并与 `pyproject.toml` 一致，例如 `v1.1.2`。
+- GitHub Release tag 必须使用 `vX.Y.Z`，并与 `pyproject.toml` 一致，例如 `v1.2.0`。
 - 需要在 PyPI 为本项目配置 Trusted Publishing：
   - Owner：`huangwb8`
   - Repository：`bensz-auto-contribution`

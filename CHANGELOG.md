@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-05-30
+
 ### Added（新增）
 
 - 新增 private-anchor 客户端核心：支持盲化 `anchor_hash`、anchor request/receipt schema 校验、Ed25519 receipt 验签、anchored checkpoint 和 `verify --require-anchor`。
